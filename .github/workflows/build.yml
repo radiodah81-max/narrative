@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Extract ZIP file
+      run: |
+        echo "📂 الملفات الموجودة:"
+        ls -la
+
+        if [ ! -f narrative.zip ]; then
+          echo "❌ ملف narrative.zip غير موجود!"
+          exit 1
+        fi
+
+        unzip narrative.zip -d ./extracted
+
+        # البحث عن gradlew في أي مكان داخل الملف
+        GRADLE_DIR=$(find ./extracted -name "gradlew" -type f -exec dirname {} \; | head -1)
+
+        if [ -z "$GRADLE_DIR" ]; then
+          echo "❌ لم يتم العثور على gradlew!"
+          exit 1
+        fi
+
+        echo "✅ تم العثور على المشروع في: $GRADLE_DIR"
+
+        # نسخ الملفات (cp أفضل من mv لتجنب الأخطاء)
+        cp -r "$GRADLE_DIR"/* ./
+        cp -r "$GRADLE_DIR"/.* ./ 2>/dev/null || true
+
+        rm -rf ./extracted
+
+        echo "✅ تم الاستخراج بنجاح!"
+        ls -la
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug.apk
+        path: app/build/outputs/apk/debug/app-debug.apk
