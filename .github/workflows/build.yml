@@ -15,7 +15,7 @@ jobs:
 
     - name: Extract ZIP file
       run: |
-        echo " الملفات الموجودة:"
+        echo "📂 الملفات الموجودة:"
         ls -la
 
         if [ ! -f narrative.zip ]; then
@@ -37,7 +37,7 @@ jobs:
     - name: Set up Gradle
       uses: gradle/gradle-build-action@v3
       with:
-        gradle-version: 8.5
+        gradle-version: 9.3.1
 
     - name: Build Debug APK
       run: |
